@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- https://phpunit.readthedocs.io/en/latest/configuration.html -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         backupGlobals="false"
+         colors="true"
+>
+    <php>
+        <ini name="display_errors" value="1"/>
+        <ini name="error_reporting" value="-1"/>
+        <env name="OTEL_SERVICE_NAME" value="cyve"/>
+        <env name="OTEL_EXPORTER_OTLP_PROTOCOL" value="http/json"/>
+        <env name="OTEL_EXPORTER_OTLP_ENDPOINT" value="http://localhost:4318"/>
+    </php>
+
+    <testsuites>
+        <testsuite name="Project Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <source ignoreIndirectDeprecations="true">
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+    </source>
+
+    <extensions>
+        <bootstrap class="Cyve\OpenTelemetry\Phpunit\OpenTelemetryExtension"/>
+    </extensions>
+</phpunit>

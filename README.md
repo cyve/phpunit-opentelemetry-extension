@@ -7,6 +7,12 @@ PHPUnit extension for test tracing
 composer require --dev cyve/phpunit-opentelemetry-extension open-telemetry/exporter-otlp
 ```
 
+`open-telemetry/exporter-otlp` required a PSR-17 and PSR-18 implementations. If you do not already have one in your application, we suggest :
+
+```bash
+composer require --dev nyholm/psr7 symfony/http-client
+```
+
 ## Configuration
 ```xml
 # phpunit.xml

@@ -2,6 +2,7 @@
 
 namespace Cyve\OpenTelemetry\Phpunit;
 
+use OpenTelemetry\API\Trace\StatusCode;
 use OpenTelemetry\API\Trace\TracerInterface;
 use OpenTelemetry\SDK\Sdk;
 use OpenTelemetry\SDK\Trace\TracerProviderFactory;
@@ -47,7 +48,7 @@ class OpenTelemetryExtension implements Extension, Tracer
             $test = $event->test();
             $testSpan = $tracer->spanBuilder($test->name())
                 ->setAttributes([
-                    'className' => $test->className(),
+                    'classname' => $test->className(),
                     'file' => $test->file(),
                     'line' => $test->line(),
                     'groups' => array_map(fn (Group $group) => $group->groupName(), iterator_to_array($test->metadata()->isGroup())),
@@ -58,9 +59,41 @@ class OpenTelemetryExtension implements Extension, Tracer
             return;
         }
 
+        if ($event instanceof Test\Errored) {
+            $error = $event->throwable();
+            $testSpan->setStatus(StatusCode::STATUS_ERROR);
+            $testSpan->setAttributes([
+                'exception.type' => $error->className(),
+                'exception.message' => $error->message(),
+                'exception.stacktrace' => $error->stackTrace(),
+            ]);
+
+            return;
+        }
+
+        if ($event instanceof Test\Skipped) {
+            $testSpan->setAttribute('status', 'skipped');
+
+            return;
+        }
+
+        if ($event instanceof Test\Passed) {
+            $testSpan->setAttribute('status', 'passed');
+
+            return;
+        }
+
+        if ($event instanceof Test\Failed) {
+            $testSpan->setStatus(StatusCode::STATUS_ERROR);
+            $testSpan->setAttribute('status', 'failed');
+
+            return;
+        }
+
         if ($event instanceof Test\Finished) {
             $testScope->detach();
-            $testSpan->setAttribute('assertions', $event->numberOfAssertionsPerformed())->end();
+            $testSpan->setAttribute('assertions', $event->numberOfAssertionsPerformed());
+            $testSpan->end();
 
             return;
         }
